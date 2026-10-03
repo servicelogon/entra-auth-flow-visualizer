@@ -104,9 +104,13 @@ function PacketChip({ step }: { step: FlowStep }) {
         PACKET_STYLES[step.packetKind]
       )}
     >
-      {step.from} → {step.to}: {step.packet}
+      {actorLabel(step.from)} → {actorLabel(step.to)}: {step.packet}
     </div>
   );
+}
+
+function actorLabel(id: ActorId) {
+  return ACTORS.find((actor) => actor.id === id)?.label ?? id;
 }
 
 function actorIndex(id: ActorId) {
