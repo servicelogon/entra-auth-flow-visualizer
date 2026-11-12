@@ -46,6 +46,7 @@ export type Artifact = {
   lifetime: string;
   issuedBy: string;
   acceptedBy: string;
+  heldBy: ActorId;
   termId: string;
   color: string;
   jwt?: JwtPart;

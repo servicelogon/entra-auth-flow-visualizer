@@ -3,9 +3,9 @@ import type { Actor, Scenario } from "./types";
 export const ACTORS: Actor[] = [
   { id: "user", label: "Alex", subtitle: "Person signing in" },
   { id: "browser", label: "Browser", subtitle: "Cookies live here" },
-  { id: "app", label: "Contoso app", subtitle: "Your web app" },
-  { id: "entra", label: "Entra ID", subtitle: "login.microsoftonline.com" },
-  { id: "api", label: "Microsoft Graph", subtitle: "Protected API" },
+  { id: "app", label: "Contoso", subtitle: "Your web app" },
+  { id: "entra", label: "Entra", subtitle: "login.microsoftonline.com" },
+  { id: "api", label: "Graph", subtitle: "Protected API" },
 ];
 
 export const SCENARIOS: Scenario[] = [

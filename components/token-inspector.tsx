@@ -8,9 +8,11 @@ import { Badge } from "@/components/ui/badge";
 export function TokenInspector({
   artifact,
   status,
+  embedded = false,
 }: {
   artifact: Artifact;
   status: ArtifactStatus;
+  embedded?: boolean;
 }) {
   const jwt = artifact.jwt
     ? buildJwt(artifact.jwt.header, artifact.jwt.payload)
@@ -18,7 +20,11 @@ export function TokenInspector({
   const [header, payload, signature] = jwt ? jwt.split(".") : [];
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-4 sm:p-5">
+    <div
+      className={
+        embedded ? "bg-white" : "rounded-2xl border border-border bg-white p-4 sm:p-5"
+      }
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-lg font-semibold tracking-tight">{artifact.label}</h3>
@@ -52,8 +58,9 @@ export function TokenInspector({
       ) : null}
 
       {artifact.jwt && jwt ? (
-        <div className="mt-4 space-y-3">
-          <p className="text-sm text-muted-foreground">
+        <details className="mt-4 space-y-3">
+          <summary className="cursor-pointer text-sm font-medium">Sample JWT</summary>
+          <p className="mt-2 text-sm text-muted-foreground">
             This is a sample <TermLink id="jwt">JWT</TermLink>. The payload is
             readable. The signature is what makes it trustworthy.
           </p>
@@ -84,7 +91,7 @@ export function TokenInspector({
               </tbody>
             </table>
           </div>
-        </div>
+        </details>
       ) : null}
     </div>
   );

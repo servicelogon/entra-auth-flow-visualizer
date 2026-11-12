@@ -9,13 +9,19 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { SCENARIOS } from "@/lib/flow-scenarios";
+import { computeStage } from "@/lib/stage";
 import { ARTIFACTS_BY_ID } from "@/lib/tokens";
-import type { ArtifactStatus, FlowStep } from "@/lib/types";
+import type { FlowStep } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { FlowCanvas } from "@/components/flow-canvas";
 import { RichText } from "@/components/term-link";
 import { TokenInspector } from "@/components/token-inspector";
-import { TokenTray, type TrayItem } from "@/components/token-tray";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 export function FlowLab() {
@@ -29,8 +35,8 @@ export function FlowLab() {
   const idle = stepIndex < 0;
   const atEnd = stepIndex >= scenario.steps.length - 1 && stepIndex >= 0;
 
-  const tray = useMemo(
-    () => computeTray(scenario.startingArtifacts, scenario.steps, stepIndex),
+  const items = useMemo(
+    () => computeStage(scenario.startingArtifacts, scenario.steps, stepIndex),
     [scenario, stepIndex]
   );
 
@@ -45,7 +51,7 @@ export function FlowLab() {
       if (next >= last) {
         setPlaying(false);
       }
-    }, 2200);
+    }, 2400);
     return () => window.clearTimeout(timer);
   }, [playing, stepIndex, scenario.steps.length]);
 
@@ -97,7 +103,7 @@ export function FlowLab() {
   }, [stepBy, togglePlay]);
 
   const selected = selectedId ? ARTIFACTS_BY_ID[selectedId] : undefined;
-  const selectedStatus = tray.find((item) => item.id === selectedId)?.status ?? "live";
+  const selectedStatus = items.find((item) => item.id === selectedId)?.status ?? "live";
   const playLabel = playing ? "Pause" : idle ? "Play" : atEnd ? "Replay" : "Resume";
 
   function reset(nextScenario = scenarioId) {
@@ -108,7 +114,7 @@ export function FlowLab() {
   }
 
   return (
-    <section id="lab" className="space-y-5">
+    <section id="lab" className="space-y-4">
       <div
         className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="group"
@@ -131,10 +137,6 @@ export function FlowLab() {
           </button>
         ))}
       </div>
-
-      <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-        {scenario.summary}
-      </p>
 
       <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Playback">
         <Button className="rounded-full px-4" onClick={togglePlay}>
@@ -159,16 +161,26 @@ export function FlowLab() {
           Next
           <ChevronRight />
         </Button>
-        <Button variant="ghost" className="rounded-full" onClick={() => reset()}>
+        <Button
+          variant="ghost"
+          size="icon-lg"
+          className="rounded-full"
+          aria-label="Restart"
+          onClick={() => reset()}
+        >
           <RotateCcw />
-          Restart
         </Button>
         <p className="text-sm text-muted-foreground tabular-nums">
-          {idle ? "Ready" : `Step ${stepIndex + 1} of ${scenario.steps.length}`}
+          {idle ? "Ready" : `${stepIndex + 1} / ${scenario.steps.length}`}
         </p>
       </div>
 
-      <FlowCanvas step={step} idle={idle} />
+      <FlowCanvas
+        step={step}
+        items={items}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+      />
 
       <div
         className={cn(
@@ -180,45 +192,43 @@ export function FlowLab() {
       >
         {idle || !step ? (
           <p className="text-sm leading-6 text-muted-foreground">
-            Press Play to follow Alex signing in to Contoso. Highlighted words open a definition.
+            Play to watch Alex sign in.
           </p>
         ) : (
           <div>
-            {step.failed ? (
-              <p className="text-sm font-medium text-destructive">This step failed.</p>
-            ) : null}
-            <h3
-              className={cn(
-                "text-lg font-semibold tracking-tight",
-                step.failed && "mt-1"
-              )}
-            >
-              {step.title}
-            </h3>
-            <p className="mt-2 text-sm leading-6">
+            <h3 className="text-base font-semibold tracking-tight">{step.title}</h3>
+            <p className="mt-1.5 text-sm leading-6">
               <RichText text={step.explanation} />
             </p>
           </div>
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <div>
-          <h3 className="mb-3 font-semibold tracking-tight">Token tray</h3>
-          <TokenTray
-            items={tray}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
-        </div>
-        {selected ? (
-          <TokenInspector artifact={selected} status={selectedStatus} />
-        ) : (
-          <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground lg:flex lg:items-center lg:justify-center">
-            Select a ticket to see lifetime, audience, and sample claims.
-          </div>
-        )}
-      </div>
+      <Sheet
+        open={Boolean(selected)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedId(null);
+          }
+        }}
+      >
+        <SheetContent side="right" className="w-full! max-w-none! sm:max-w-md!">
+          {selected ? (
+            <>
+              <SheetHeader className="sr-only">
+                <SheetTitle>{selected.label}</SheetTitle>
+              </SheetHeader>
+              <div className="overflow-y-auto px-4 pb-6">
+                <TokenInspector
+                  artifact={selected}
+                  status={selectedStatus}
+                  embedded
+                />
+              </div>
+            </>
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </section>
   );
 }
@@ -233,35 +243,4 @@ function isControlTarget(target: EventTarget | null) {
   return target instanceof HTMLElement
     ? Boolean(target.closest("button, a, input, textarea, select, [contenteditable='true']"))
     : false;
-}
-
-function computeTray(
-  starting: string[],
-  steps: FlowStep[],
-  stepIndex: number
-): TrayItem[] {
-  const map = new Map<string, ArtifactStatus>();
-  for (const id of starting) {
-    map.set(id, "live");
-  }
-  const applied = stepIndex < 0 ? [] : steps.slice(0, stepIndex + 1);
-  for (const step of applied) {
-    for (const event of step.artifacts) {
-      if (event.action === "add" || event.action === "replace") {
-        map.set(event.artifactId, "live");
-      } else if (event.action === "remove") {
-        map.set(event.artifactId, "consumed");
-      } else if (event.action === "expire") {
-        map.set(event.artifactId, "expired");
-      }
-    }
-  }
-  const changed = new Set(
-    stepIndex < 0 ? [] : steps[stepIndex].artifacts.map((event) => event.artifactId)
-  );
-  return Array.from(map.entries()).map(([id, status]) => ({
-    id,
-    status,
-    changed: changed.has(id),
-  }));
 }
