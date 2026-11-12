@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { siteBasePath } from "@/lib/site-path";
 
 export function SiteFooter() {
   return (
@@ -11,7 +12,7 @@ export function SiteFooter() {
           className="inline-flex w-[min(13.5rem,70vw)] shrink-0"
         >
           <Image
-            src="/new-frontier-security-logo.png"
+            src={`${siteBasePath}/new-frontier-security-logo.png`}
             alt="New Frontier Security"
             width={2010}
             height={529}
