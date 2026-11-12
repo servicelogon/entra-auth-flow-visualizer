@@ -1,6 +1,6 @@
 "use client";
 
-import { ARTIFACTS_BY_ID } from "@/lib/tokens";
+import { ARTIFACTS_BY_ID, artifactStatusLabel } from "@/lib/tokens";
 import type { ArtifactStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 export type TrayItem = {
   id: string;
   status: ArtifactStatus;
+  changed?: boolean;
 };
 
 export function TokenTray({
@@ -24,8 +25,7 @@ export function TokenTray({
       <div className="rounded-2xl border border-dashed border-border px-4 py-8 text-center">
         <p className="font-medium">No tickets yet</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Play a scenario. Codes, tokens, and cookies will land here as they are
-          created.
+          Codes, tokens, and cookies show up here as the scenario creates them.
         </p>
       </div>
     );
@@ -45,7 +45,8 @@ export function TokenTray({
               "rounded-2xl border px-3 py-3 text-left transition-all",
               selected
                 ? "border-magenta bg-magenta-soft"
-                : "border-border bg-white hover:border-foreground/20"
+                : "border-border bg-white hover:border-foreground/20",
+              item.changed && "ring-2 ring-magenta/35"
             )}
           >
             <div className="flex items-start justify-between gap-2">
@@ -63,11 +64,12 @@ export function TokenTray({
                   item.status === "consumed" && "text-muted-foreground"
                 )}
               >
-                {item.status}
+                {artifactStatusLabel(item.status)}
               </Badge>
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              {artifact.lifetime} · tap to inspect
+              {artifact.lifetime}
+              {item.changed ? " · Updated this step" : ""} · Select for details
             </p>
           </button>
         );

@@ -50,19 +50,17 @@ export function GlossaryProvider({ children }: { children: React.ReactNode }) {
           }
         }}
       >
-        <SheetContent side="right" className="w-full sm:max-w-md">
+        <SheetContent
+          side="right"
+          className="w-full! max-w-none! sm:max-w-md!"
+        >
           {term ? (
             <>
               <SheetHeader className="border-b border-border pr-10">
-                <p className="text-[11px] font-medium tracking-[0.16em] text-magenta uppercase">
-                  Defined term
-                </p>
                 <SheetTitle className="text-xl">{term.title}</SheetTitle>
                 {term.alsoCalled ? (
                   <SheetDescription>Also called {term.alsoCalled}.</SheetDescription>
-                ) : (
-                  <SheetDescription>Plain-language definition.</SheetDescription>
-                )}
+                ) : null}
               </SheetHeader>
               <div className="flex flex-col gap-5 overflow-y-auto px-4 pb-6">
                 <DefinitionBlock label="What it is" text={term.what} />
@@ -80,9 +78,7 @@ export function GlossaryProvider({ children }: { children: React.ReactNode }) {
 function DefinitionBlock({ label, text }: { label: string; text: string }) {
   return (
     <div>
-      <p className="mb-1 text-[11px] font-medium tracking-[0.14em] text-magenta uppercase">
-        {label}
-      </p>
+      <p className="mb-1 text-sm font-medium">{label}</p>
       <p className="text-sm leading-6 text-foreground">{text}</p>
     </div>
   );

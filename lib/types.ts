@@ -21,7 +21,7 @@ export type ArtifactKind =
   | "ests-persistent"
   | "pkce";
 
-export type TermGroup = "people" | "tickets" | "sessions" | "device";
+export type TermGroup = "people" | "tickets" | "sessions" | "device" | "paths";
 
 export type Term = {
   id: string;

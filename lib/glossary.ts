@@ -21,6 +21,11 @@ export const TERM_GROUPS: { id: TermGroup; title: string; blurb: string }[] = [
     title: "Device trust",
     blurb: "Why a work laptop often signs you in without asking again.",
   },
+  {
+    id: "paths",
+    title: "Other sign-in paths",
+    blurb: "Sign-in methods that do not appear in the animated lab.",
+  },
 ];
 
 export const TERMS: Term[] = [
@@ -278,7 +283,7 @@ export const TERMS: Term[] = [
   {
     id: "device-code",
     title: "Device code flow",
-    group: "device",
+    group: "paths",
     what: "A sign-in for TVs and CLIs: the device shows a code, you enter it at microsoft.com/devicelogin on another computer.",
     why: "Those devices cannot host a full browser login.",
     mixUp:
@@ -287,7 +292,7 @@ export const TERMS: Term[] = [
   {
     id: "client-credentials",
     title: "Client credentials flow",
-    group: "device",
+    group: "paths",
     what: "An app signs in as itself with a secret or certificate. There is no user, and usually no refresh token.",
     why: "Background jobs and daemons need to call APIs when nobody is at a keyboard.",
     mixUp:
@@ -296,7 +301,7 @@ export const TERMS: Term[] = [
   {
     id: "on-behalf-of",
     title: "On-behalf-of flow",
-    group: "device",
+    group: "paths",
     what: "A middle-tier API trades a user’s incoming access token for a new token to call a downstream API.",
     why: "Your API should not reuse the browser’s Graph token. It asks Entra ID for a token meant for the next API.",
     mixUp:

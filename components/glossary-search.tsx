@@ -68,6 +68,10 @@ export function GlossarySearch() {
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">
                     {term.what}
                   </p>
+                  <p className="mt-3 text-sm leading-6">
+                    <span className="font-medium">Common mix-up. </span>
+                    <span className="text-muted-foreground">{term.mixUp}</span>
+                  </p>
                 </article>
               ))}
             </div>
