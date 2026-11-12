@@ -1,4 +1,15 @@
-import type { Artifact } from "./types";
+import type { Artifact, ArtifactStatus } from "./types";
+
+export function artifactStatusLabel(status: ArtifactStatus) {
+  switch (status) {
+    case "live":
+      return "Active";
+    case "expired":
+      return "Expired";
+    case "consumed":
+      return "Used";
+  }
+}
 
 function encodeSegment(value: object) {
   const json = JSON.stringify(value);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,6 +27,7 @@ export function FlowLab() {
   const scenario = SCENARIOS.find((item) => item.id === scenarioId) ?? SCENARIOS[0];
   const step: FlowStep | null = stepIndex >= 0 ? scenario.steps[stepIndex] : null;
   const idle = stepIndex < 0;
+  const atEnd = stepIndex >= scenario.steps.length - 1 && stepIndex >= 0;
 
   const tray = useMemo(
     () => computeTray(scenario.startingArtifacts, scenario.steps, stepIndex),
@@ -48,8 +49,56 @@ export function FlowLab() {
     return () => window.clearTimeout(timer);
   }, [playing, stepIndex, scenario.steps.length]);
 
+  const stepBy = useCallback((delta: number) => {
+    setPlaying(false);
+    setStepIndex((current) => {
+      if (delta > 0) {
+        if (current >= scenario.steps.length - 1) {
+          return current;
+        }
+        return current < 0 ? 0 : current + 1;
+      }
+      return Math.max(-1, current - 1);
+    });
+  }, [scenario.steps.length]);
+
+  const togglePlay = useCallback(() => {
+    if (idle || atEnd) {
+      setStepIndex(0);
+      setPlaying(true);
+      return;
+    }
+    setPlaying((value) => !value);
+  }, [idle, atEnd]);
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (isTypingTarget(event.target) || event.altKey || event.metaKey || event.ctrlKey) {
+        return;
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        stepBy(1);
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        stepBy(-1);
+        return;
+      }
+      if (event.key === " " && !isControlTarget(event.target)) {
+        event.preventDefault();
+        togglePlay();
+      }
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [stepBy, togglePlay]);
+
   const selected = selectedId ? ARTIFACTS_BY_ID[selectedId] : undefined;
   const selectedStatus = tray.find((item) => item.id === selectedId)?.status ?? "live";
+  const playLabel = playing ? "Pause" : idle ? "Play" : atEnd ? "Replay" : "Resume";
 
   function reset(nextScenario = scenarioId) {
     setScenarioId(nextScenario);
@@ -60,14 +109,19 @@ export function FlowLab() {
 
   return (
     <section id="lab" className="space-y-5">
-      <div className="flex flex-wrap gap-2">
+      <div
+        className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        role="group"
+        aria-label="Scenarios"
+      >
         {SCENARIOS.map((item) => (
           <button
             key={item.id}
             type="button"
+            aria-pressed={item.id === scenarioId}
             onClick={() => reset(item.id)}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-sm transition-colors",
+              "shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors",
               item.id === scenarioId
                 ? "border-foreground bg-foreground text-background"
                 : "border-border bg-white hover:border-foreground/30"
@@ -82,63 +136,35 @@ export function FlowLab() {
         {scenario.summary}
       </p>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          size="lg"
-          className="rounded-full px-4"
-          onClick={() => {
-            if (idle || stepIndex >= scenario.steps.length - 1) {
-              setStepIndex(0);
-              setPlaying(true);
-              return;
-            }
-            setPlaying((value) => !value);
-          }}
-        >
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Playback">
+        <Button className="rounded-full px-4" onClick={togglePlay}>
           {playing ? <Pause /> : <Play />}
-          {idle ? "Play" : playing ? "Pause" : "Resume"}
+          {playLabel}
         </Button>
         <Button
           variant="outline"
-          size="lg"
           className="rounded-full"
           disabled={stepIndex < 0}
-          onClick={() => {
-            setPlaying(false);
-            setStepIndex((current) => Math.max(-1, current - 1));
-          }}
+          onClick={() => stepBy(-1)}
         >
           <ChevronLeft />
           Back
         </Button>
         <Button
           variant="outline"
-          size="lg"
           className="rounded-full"
-          disabled={stepIndex >= scenario.steps.length - 1}
-          onClick={() => {
-            setPlaying(false);
-            setStepIndex((current) =>
-              current < 0 ? 0 : Math.min(scenario.steps.length - 1, current + 1)
-            );
-          }}
+          disabled={atEnd}
+          onClick={() => stepBy(1)}
         >
           Next
           <ChevronRight />
         </Button>
-        <Button
-          variant="ghost"
-          size="lg"
-          className="rounded-full"
-          onClick={() => reset()}
-        >
+        <Button variant="ghost" className="rounded-full" onClick={() => reset()}>
           <RotateCcw />
           Restart
         </Button>
-        <p className="text-sm text-muted-foreground">
-          {idle
-            ? "Ready"
-            : `Step ${stepIndex + 1} of ${scenario.steps.length}`}
+        <p className="text-sm text-muted-foreground tabular-nums">
+          {idle ? "Ready" : `Step ${stepIndex + 1} of ${scenario.steps.length}`}
         </p>
       </div>
 
@@ -146,26 +172,27 @@ export function FlowLab() {
 
       <div
         className={cn(
-          "sticky bottom-3 z-30 rounded-2xl border p-4 shadow-lg sm:static sm:shadow-none",
-          step?.failed
-            ? "border-destructive/30 bg-[#fef3f2]"
-            : "border-border bg-white/95 backdrop-blur-md"
+          "rounded-2xl border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]",
+          step?.failed ? "border-destructive/30 bg-[#fef3f2]" : "border-border bg-white"
         )}
+        aria-live="polite"
+        aria-atomic="true"
       >
         {idle || !step ? (
-          <div>
-            <p className="font-semibold tracking-tight">Waiting to start</p>
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Press Play to watch Alex sign in to Contoso. Highlighted words open
-              a definition.
-            </p>
-          </div>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Press Play to follow Alex signing in to Contoso. Highlighted words open a definition.
+          </p>
         ) : (
           <div>
-            <p className="text-[11px] font-medium tracking-[0.14em] text-magenta uppercase">
-              {step.failed ? "This step failed" : "What just happened"}
-            </p>
-            <h3 className="mt-1 text-lg font-semibold tracking-tight">
+            {step.failed ? (
+              <p className="text-sm font-medium text-destructive">This step failed.</p>
+            ) : null}
+            <h3
+              className={cn(
+                "text-lg font-semibold tracking-tight",
+                step.failed && "mt-1"
+              )}
+            >
               {step.title}
             </h3>
             <p className="mt-2 text-sm leading-6">
@@ -196,6 +223,18 @@ export function FlowLab() {
   );
 }
 
+function isTypingTarget(target: EventTarget | null) {
+  return target instanceof HTMLElement
+    ? Boolean(target.closest("input, textarea, select, [contenteditable='true']"))
+    : false;
+}
+
+function isControlTarget(target: EventTarget | null) {
+  return target instanceof HTMLElement
+    ? Boolean(target.closest("button, a, input, textarea, select, [contenteditable='true']"))
+    : false;
+}
+
 function computeTray(
   starting: string[],
   steps: FlowStep[],
@@ -217,5 +256,12 @@ function computeTray(
       }
     }
   }
-  return Array.from(map.entries()).map(([id, status]) => ({ id, status }));
+  const changed = new Set(
+    stepIndex < 0 ? [] : steps[stepIndex].artifacts.map((event) => event.artifactId)
+  );
+  return Array.from(map.entries()).map(([id, status]) => ({
+    id,
+    status,
+    changed: changed.has(id),
+  }));
 }

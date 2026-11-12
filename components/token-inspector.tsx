@@ -1,6 +1,6 @@
 "use client";
 
-import { buildJwt } from "@/lib/tokens";
+import { artifactStatusLabel, buildJwt } from "@/lib/tokens";
 import type { Artifact, ArtifactStatus } from "@/lib/types";
 import { TermLink } from "@/components/term-link";
 import { Badge } from "@/components/ui/badge";
@@ -21,14 +21,9 @@ export function TokenInspector({
     <div className="rounded-2xl border border-border bg-white p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="text-[11px] font-medium tracking-[0.14em] text-magenta uppercase">
-            Inspector
-          </p>
-          <h3 className="mt-1 text-lg font-semibold tracking-tight">
-            {artifact.label}
-          </h3>
+          <h3 className="text-lg font-semibold tracking-tight">{artifact.label}</h3>
         </div>
-        <Badge variant="outline">{status}</Badge>
+        <Badge variant="outline">{artifactStatusLabel(status)}</Badge>
       </div>
 
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">

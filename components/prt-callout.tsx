@@ -9,17 +9,12 @@ export function PrtCallout() {
           <Laptop className="size-5" />
         </span>
         <div>
-          <p className="text-[11px] font-medium tracking-[0.14em] text-magenta uppercase">
-            On a work laptop
-          </p>
-          <h3 className="mt-1 font-semibold tracking-tight">
-            Why the password never appears
-          </h3>
+          <h3 className="font-semibold tracking-tight">On a work laptop</h3>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            If the device is Entra-joined, Windows (or the Authenticator broker)
+            When the device is Entra joined, Windows or the Authenticator broker
             already holds a <TermLink id="prt">Primary Refresh Token</TermLink>.
-            Apps ask the OS for tokens. You still get access and ID tokens — they
-            just were not collected through a browser password form.
+            Apps ask the operating system for tokens. Entra ID still issues access
+            tokens and ID tokens, without a browser password form.
           </p>
         </div>
       </div>

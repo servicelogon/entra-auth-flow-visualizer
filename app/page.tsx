@@ -11,12 +11,12 @@ export default function Home() {
           New Frontier Security
         </p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          How Microsoft sign-in actually works
+          How a Microsoft sign-in works
         </h1>
         <p className="mt-4 text-lg leading-8 text-muted-foreground text-pretty">
-          Watch a person, a browser, an app,{" "}
-          <TermLink id="entra-id">Microsoft Entra ID</TermLink>, and Graph pass
-          tickets to each other. Every highlighted word has a definition.
+          A person, a browser, an app,{" "}
+          <TermLink id="entra-id">Microsoft Entra ID</TermLink>, and Microsoft
+          Graph pass tickets between them. Highlighted words open a definition.
         </p>
       </section>
 

@@ -13,7 +13,7 @@ export const SCENARIOS: Scenario[] = [
     id: "first-signin",
     title: "First sign-in",
     summary: "Alex opens Contoso for the first time. Watch the authorization code, PKCE, and three tokens appear.",
-    startingArtifacts: ["pkce"],
+    startingArtifacts: [],
     steps: [
       {
         id: "open-app",
@@ -316,7 +316,7 @@ export const SCENARIOS: Scenario[] = [
         id: "retry-graph",
         title: "The same API call succeeds",
         explanation:
-          "Contoso retries with the new [[bearer-token|Bearer]] token. Alex did not type a password. That is the whole point of a refresh token.",
+          "Contoso retries with the new [[bearer-token|Bearer]] token. Alex does not type a password.",
         from: "app",
         to: "api",
         packet: "Bearer (new token)",
@@ -330,7 +330,7 @@ export const SCENARIOS: Scenario[] = [
   {
     id: "sign-out",
     title: "Sign out",
-    summary: "Leaving Contoso is not the same as leaving Microsoft. Watch which cookies actually disappear.",
+    summary: "Leaving Contoso is not the same as leaving Microsoft. See which cookies are removed.",
     startingArtifacts: [
       "id-token",
       "access-token",
