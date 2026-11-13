@@ -1,5 +1,7 @@
 # Entra Token Lab
 
+**Live site:** [servicelogon.github.io/entra-auth-flow-visualizer](https://servicelogon.github.io/entra-auth-flow-visualizer/)
+
 An interactive explainer from [New Frontier Security](https://medium.com/hybrid-identity-security) for how Microsoft Entra ID login works: authorization codes, ID tokens, access tokens, refresh tokens, app session cookies, and Entra ESTS cookies.
 
 Nothing here talks to a real tenant. The flows are a guided simulation.
