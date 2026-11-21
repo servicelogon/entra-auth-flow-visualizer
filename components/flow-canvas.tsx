@@ -166,6 +166,18 @@ export function FlowCanvas({
                       />
                     ))}
                   </div>
+                  {step && step.to === actor.id ? (
+                    <div className="mt-2 md:hidden">
+                      <div
+                        className={cn(
+                          "inline-block max-w-full rounded-full px-3 py-1.5 text-center text-[11px] leading-4 font-medium break-words",
+                          PACKET_STYLES[step.packetKind]
+                        )}
+                      >
+                        {step.packet}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             );
@@ -186,7 +198,7 @@ export function FlowCanvas({
                 ? { duration: 0 }
                 : { duration: 0.75, ease: [0.22, 1, 0.36, 1] }
             }
-            className="pointer-events-none absolute top-0 left-0 z-20 -translate-x-1/2 -translate-y-1/2"
+            className="pointer-events-none absolute top-0 left-0 z-20 hidden -translate-x-1/2 -translate-y-1/2 md:block"
           >
             <div
               className={cn(
