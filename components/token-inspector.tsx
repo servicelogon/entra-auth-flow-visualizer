@@ -1,118 +1,106 @@
 "use client";
 
+import { Dialog } from "@base-ui/react/dialog";
 import { artifactStatusLabel, buildJwt } from "@/lib/tokens";
 import type { Artifact, ArtifactStatus } from "@/lib/types";
 import { TermLink } from "@/components/term-link";
-import { Badge } from "@/components/ui/badge";
 
 export function TokenInspector({
   artifact,
   status,
-  embedded = false,
+  headingRef,
 }: {
   artifact: Artifact;
   status: ArtifactStatus;
-  embedded?: boolean;
+  headingRef: React.RefObject<HTMLHeadingElement | null>;
 }) {
-  const jwt = artifact.jwt
-    ? buildJwt(artifact.jwt.header, artifact.jwt.payload)
-    : null;
+  const jwt = artifact.jwt ? buildJwt(artifact.jwt.header, artifact.jwt.payload) : null;
   const [header, payload, signature] = jwt ? jwt.split(".") : [];
 
   return (
-    <div
-      className={
-        embedded ? "bg-white" : "rounded-2xl border border-border bg-white p-4 sm:p-5"
-      }
-    >
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h3 className="text-lg font-semibold tracking-tight">{artifact.label}</h3>
-        </div>
-        <Badge variant="outline">{artifactStatusLabel(status)}</Badge>
-      </div>
+    <article>
+      <header className="drawer-head">
+        <span className={`badge ${status}`}>{artifactStatusLabel(status)}</span>
+        <Dialog.Title ref={headingRef} tabIndex={-1} render={<h2 />}>
+          <span className="dot-label" style={{ "--dot": artifact.color } as React.CSSProperties}>
+            {artifact.label}
+          </span>
+        </Dialog.Title>
+      </header>
 
-      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+      <dl className="facts">
         <Fact label="Typical lifetime" value={artifact.lifetime} />
         <Fact label="Issued by" value={artifact.issuedBy} />
         <Fact label="Accepted by" value={artifact.acceptedBy} />
         <div>
-          <dt className="text-xs text-muted-foreground">Learn more</dt>
-          <dd className="mt-0.5">
+          <dt>Learn more</dt>
+          <dd>
             <TermLink id={artifact.termId}>{artifact.label}</TermLink>
           </dd>
         </div>
       </dl>
 
       {artifact.opaqueValue ? (
-        <div className="mt-4">
-          <p className="text-xs text-muted-foreground">Opaque value</p>
-          <code className="mt-1 block overflow-x-auto rounded-xl bg-muted px-3 py-2 font-mono text-xs">
-            {artifact.opaqueValue}
-          </code>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This is not meant to be decoded. Treat it like a password: send it
-            only to the endpoint that issued it.
+        <section className="drawer-section">
+          <h3 className="kicker">Opaque value</h3>
+          <code className="code-block">{artifact.opaqueValue}</code>
+          <p className="muted" style={{ marginTop: 10 }}>
+            Not meant to be decoded. Treat it like a password: send it only to the
+            endpoint that issued it.
           </p>
-        </div>
+        </section>
       ) : null}
 
       {artifact.jwt && jwt ? (
-        <details className="mt-4 space-y-3">
-          <summary className="cursor-pointer text-sm font-medium">Sample JWT</summary>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This is a sample <TermLink id="jwt">JWT</TermLink>. The payload is
-            readable. The signature is what makes it trustworthy.
-          </p>
-          <JwtChunk label="Header" value={header} />
-          <JwtChunk label="Payload" value={payload} />
-          <JwtChunk label="Signature" value={signature} />
-          <div className="overflow-x-auto rounded-xl border border-border">
-            <table className="w-full min-w-[20rem] text-left text-sm">
-              <thead className="bg-muted text-xs text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2 font-medium">Claim</th>
-                  <th className="px-3 py-2 font-medium">Value</th>
-                  <th className="px-3 py-2 font-medium">Meaning</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(artifact.jwt.payload).map(([key, value]) => (
-                  <tr key={key} className="border-t border-border">
-                    <td className="px-3 py-2 font-mono text-xs">{key}</td>
-                    <td className="px-3 py-2 font-mono text-xs break-all">
-                      {Array.isArray(value) ? value.join(" ") : String(value)}
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground">
-                      {artifact.claimNotes?.[key] ?? "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </details>
+        <>
+          <section className="drawer-section">
+            <h3 className="kicker">Sample JWT</h3>
+            <p>
+              A sample <TermLink id="jwt">JWT</TermLink>. Anyone can read the
+              payload. The signature is what makes it trustworthy.
+            </p>
+            <div className="jwt">
+              <code className="code-block">
+                <span className="jwt-h">{header}</span>
+                <span className="jwt-dot">.</span>
+                <span className="jwt-p">{payload}</span>
+                <span className="jwt-dot">.</span>
+                <span className="jwt-s">{signature}</span>
+              </code>
+              <ul className="jwt-legend" aria-label="Parts">
+                <li className="jwt-h"><span>Header</span></li>
+                <li className="jwt-p"><span>Payload</span></li>
+                <li className="jwt-s"><span>Signature</span></li>
+              </ul>
+            </div>
+          </section>
+          <section className="drawer-section">
+            <h3 className="kicker">Claims in the payload</h3>
+            <ul className="claims">
+              {Object.entries(artifact.jwt.payload).map(([key, value]) => (
+                <li key={key}>
+                  <span className="claim-key">{key}</span>
+                  <span className="claim-value">
+                    {Array.isArray(value) ? value.join(" ") : String(value)}
+                  </span>
+                  {artifact.claimNotes?.[key] ? (
+                    <span className="claim-note">{artifact.claimNotes[key]}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
       ) : null}
-    </div>
+    </article>
   );
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5">{value}</dd>
-    </div>
-  );
-}
-
-function JwtChunk({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <code className="mt-1 block overflow-x-auto rounded-xl bg-muted px-3 py-2 font-mono text-[11px] break-all">
-        {value}
-      </code>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
     </div>
   );
 }

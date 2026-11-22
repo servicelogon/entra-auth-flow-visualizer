@@ -1,7 +1,7 @@
 "use client";
 
-import { useGlossary } from "@/components/glossary-provider";
-import { cn } from "@/lib/utils";
+import { useDrawer } from "@/components/glossary-provider";
+import { cx } from "@/lib/utils";
 
 export function TermLink({
   id,
@@ -12,16 +12,14 @@ export function TermLink({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { openTerm } = useGlossary();
+  const { openTerm } = useDrawer();
 
   return (
     <button
       type="button"
       onClick={() => openTerm(id)}
-      className={cn(
-        "inline rounded-sm bg-magenta-soft px-1 py-0.5 font-medium text-magenta underline decoration-magenta/30 underline-offset-2 transition-colors hover:bg-[#f8bbd0]",
-        className
-      )}
+      aria-haspopup="dialog"
+      className={cx("term", className)}
     >
       {children}
     </button>

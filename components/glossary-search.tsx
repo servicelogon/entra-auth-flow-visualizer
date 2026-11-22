@@ -1,80 +1,94 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { TERM_GROUPS, TERMS } from "@/lib/glossary";
-import { Input } from "@/components/ui/input";
-import { TermLink } from "@/components/term-link";
+import { useDrawer } from "@/components/glossary-provider";
 
 export function GlossarySearch() {
   const [query, setQuery] = useState("");
+  const { openTerm } = useDrawer();
   const normalized = query.trim().toLowerCase();
 
-  const grouped = useMemo(() => {
-    const matches = TERMS.filter((term) => {
+  const { grouped, matches } = useMemo(() => {
+    const found = TERMS.filter((term) => {
       if (!normalized) {
         return true;
       }
-      const haystack = [
-        term.title,
-        term.alsoCalled ?? "",
-        term.what,
-        term.why,
-        term.mixUp,
-      ]
+      return [term.title, term.alsoCalled ?? "", term.what, term.why, term.mixUp]
         .join(" ")
-        .toLowerCase();
-      return haystack.includes(normalized);
+        .toLowerCase()
+        .includes(normalized);
     });
-
-    return TERM_GROUPS.map((group) => ({
-      ...group,
-      terms: matches.filter((term) => term.group === group.id),
-    })).filter((group) => group.terms.length > 0);
+    return {
+      matches: found.length,
+      grouped: TERM_GROUPS.map((group) => ({
+        ...group,
+        terms: found.filter((term) => term.group === group.id),
+      })).filter((group) => group.terms.length > 0),
+    };
   }, [normalized]);
 
   return (
-    <div className="space-y-8">
-      <Input
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search tokens, cookies, PKCE, PRT…"
-        aria-label="Search glossary"
-        className="h-11 rounded-full px-4"
-      />
+    <div>
+      <div className="search-field">
+        <Search aria-hidden />
+        <input
+          type="search"
+          className="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search tokens, cookies, PKCE, PRT…"
+          aria-label="Search the glossary"
+          autoComplete="off"
+          spellCheck={false}
+        />
+      </div>
+      <p className="muted search-status" role="status">
+        {normalized
+          ? `${matches} ${matches === 1 ? "term matches" : "terms match"} “${query.trim()}”`
+          : `${TERMS.length} terms in ${TERM_GROUPS.length} groups`}
+      </p>
 
       {grouped.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border px-4 py-10 text-center">
-          <p className="font-medium">No matching terms</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Try “refresh”, “cookie”, or “audience”.
-          </p>
+        <div className="empty-note">
+          <h3>No matching terms</h3>
+          <p className="muted">Try “refresh”, “cookie”, or “audience”.</p>
         </div>
       ) : (
         grouped.map((group) => (
-          <section key={group.id} className="space-y-4">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight">{group.title}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{group.blurb}</p>
+          <section key={group.id} className="term-group" aria-labelledby={`group-${group.id}`}>
+            <div className="term-group-head">
+              <h3 className="block-title" id={`group-${group.id}`}>
+                {group.title}
+                <span className="count">{group.terms.length}</span>
+              </h3>
+              <p className="muted">{group.blurb}</p>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <ul className="term-list">
               {group.terms.map((term) => (
-                <article
-                  key={term.id}
-                  className="rounded-2xl border border-border bg-white p-4"
-                >
-                  <h3 className="font-semibold tracking-tight">
-                    <TermLink id={term.id}>{term.title}</TermLink>
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {term.what}
-                  </p>
-                  <p className="mt-3 text-sm leading-6">
-                    <span className="font-medium">Common mix-up. </span>
-                    <span className="text-muted-foreground">{term.mixUp}</span>
-                  </p>
-                </article>
+                <li key={term.id} className="term-row">
+                  <div>
+                    <button
+                      type="button"
+                      className="term-title"
+                      aria-haspopup="dialog"
+                      onClick={() => openTerm(term.id)}
+                    >
+                      {term.title}
+                      <span className="arrow-icon" aria-hidden="true" />
+                    </button>
+                    {term.alsoCalled ? <p className="term-also">Also called {term.alsoCalled}</p> : null}
+                  </div>
+                  <div>
+                    <p className="term-what">{term.what}</p>
+                    <p className="term-mixup">
+                      <b>Common mix-up.</b> {term.mixUp}
+                    </p>
+                  </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         ))
       )}

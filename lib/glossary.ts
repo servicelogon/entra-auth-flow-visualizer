@@ -32,7 +32,7 @@ export const TERMS: Term[] = [
   {
     id: "entra-id",
     title: "Microsoft Entra ID",
-    alsoCalled: "formerly Azure Active Directory",
+    alsoCalled: "Azure Active Directory, its former name",
     group: "people",
     what: "Microsoft’s cloud directory. It stores users, apps, and the rules for who can sign in.",
     why: "Apps do not keep your Microsoft password. They send you to Entra ID, which proves who you are and then issues tickets the app can trust.",

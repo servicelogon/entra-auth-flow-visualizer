@@ -1,41 +1,35 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { GlossaryProvider } from "@/components/glossary-provider";
+import type { Metadata, Viewport } from "next";
+import { DrawerProvider } from "@/components/glossary-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { ToolIntro } from "@/components/tool-intro";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Entra Token Lab · New Frontier Security",
   description:
-    "An interactive walkthrough of access tokens, refresh tokens, ID tokens, and Entra ID session cookies.",
+    "Watch a Microsoft Entra sign-in hand off its authorization code, ID token, access token, and refresh token. A New Frontier Security tool.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#151515",
+  colorScheme: "dark",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col bg-background text-foreground">
-        <TooltipProvider>
-          <GlossaryProvider>
-            <SiteHeader />
-            {children}
-            <SiteFooter />
-          </GlossaryProvider>
-        </TooltipProvider>
+    <html lang="en">
+      <body>
+        <DrawerProvider>
+          <a className="skip" href="#main">
+            Skip to content
+          </a>
+          <SiteHeader />
+          <ToolIntro />
+          {children}
+          <SiteFooter />
+        </DrawerProvider>
       </body>
     </html>
   );

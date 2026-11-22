@@ -42,7 +42,7 @@ export const ARTIFACTS: Artifact[] = [
     acceptedBy: "Entra ID token endpoint",
     heldBy: "app",
     termId: "pkce",
-    color: "#6d4c41",
+    color: "#b5a48e",
     opaqueValue: "nQ8vL2p0xE4wR7sK1mC9bT6yU3iA5dF8hG2j",
   },
   {
@@ -55,7 +55,7 @@ export const ARTIFACTS: Artifact[] = [
     acceptedBy: "Entra ID token endpoint",
     heldBy: "app",
     termId: "authorization-code",
-    color: "#7c4dff",
+    color: "#a78bfa",
     opaqueValue: "0.AXQAnM8code_lab_only_not_real",
   },
   {
@@ -68,7 +68,7 @@ export const ARTIFACTS: Artifact[] = [
     acceptedBy: "Contoso app (to identify Alex)",
     heldBy: "app",
     termId: "id-token",
-    color: "#00897b",
+    color: "#4fc1b0",
     jwt: {
       header: jwtHeader,
       payload: {
@@ -103,7 +103,7 @@ export const ARTIFACTS: Artifact[] = [
     acceptedBy: "Microsoft Graph",
     heldBy: "app",
     termId: "access-token",
-    color: "#d81b60",
+    color: "#f07aaa",
     jwt: {
       header: jwtHeader,
       payload: {
@@ -137,7 +137,7 @@ export const ARTIFACTS: Artifact[] = [
     acceptedBy: "Entra ID token endpoint only",
     heldBy: "app",
     termId: "refresh-token",
-    color: "#f9a825",
+    color: "#e3a548",
     opaqueValue: "0.AXQArefr_lab_only_do_not_send_to_graph",
   },
   {
@@ -150,7 +150,7 @@ export const ARTIFACTS: Artifact[] = [
     acceptedBy: "Contoso app",
     heldBy: "browser",
     termId: "app-session",
-    color: "#191919",
+    color: "#d0d0d4",
     opaqueValue: "contoso.sid=s%3Aalex.lab",
   },
   {
@@ -163,7 +163,7 @@ export const ARTIFACTS: Artifact[] = [
     acceptedBy: "login.microsoftonline.com",
     heldBy: "browser",
     termId: "estsauth",
-    color: "#1565c0",
+    color: "#6aa8ec",
     opaqueValue: "ESTSAUTH=session-lab-value",
   },
   {
@@ -176,7 +176,7 @@ export const ARTIFACTS: Artifact[] = [
     acceptedBy: "login.microsoftonline.com",
     heldBy: "browser",
     termId: "estsauth",
-    color: "#283593",
+    color: "#8c95ee",
     opaqueValue: "ESTSAUTHPERSISTENT=persistent-lab-value",
   },
 ];
@@ -188,36 +188,42 @@ export const ARTIFACTS_BY_ID = Object.fromEntries(
 export const TOKEN_COMPARISON = [
   {
     name: "Authorization code",
+    artifactId: "authorization-code",
     lifetime: "~10 minutes, one use",
     answers: "May the app collect tokens?",
     sentTo: "Entra /token",
   },
   {
     name: "ID token",
+    artifactId: "id-token",
     lifetime: "~1 hour",
     answers: "Who signed in?",
     sentTo: "The app only",
   },
   {
     name: "Access token",
+    artifactId: "access-token",
     lifetime: "~1 hour",
     answers: "What may the app do at this API?",
     sentTo: "Graph or your API",
   },
   {
     name: "Refresh token",
+    artifactId: "refresh-token",
     lifetime: "Long-lived",
     answers: "May the app get new access tokens?",
     sentTo: "Entra /token only",
   },
   {
     name: "App session",
+    artifactId: "app-session",
     lifetime: "Until logout",
     answers: "Is this browser still signed into Contoso?",
     sentTo: "Contoso only",
   },
   {
     name: "Entra session",
+    artifactId: "ests-session",
     lifetime: "Browser or persistent",
     answers: "Is this browser still signed into Microsoft?",
     sentTo: "login.microsoftonline.com",

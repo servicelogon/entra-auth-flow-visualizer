@@ -1,50 +1,93 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BrandMark } from "@/components/brand-mark";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { siteBasePath } from "@/lib/site-path";
+
+// The same chrome as newfrontiersecurity.net: logo, three links, and a
+// full-screen menu on phones. The lab lives in the Toolbox.
+export const SITE = "https://newfrontiersecurity.net";
+export const NAV_LINKS: [string, string][] = [
+  ["Blog", `${SITE}/`],
+  ["Newsroom", `${SITE}/newsroom`],
+  ["Toolbox", `${SITE}/tools`],
+];
+
+export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <>
+      {NAV_LINKS.map(([name, href]) => (
+        <a
+          key={name}
+          href={href}
+          aria-current={name === "Toolbox" ? "page" : undefined}
+          onClick={onNavigate}
+        >
+          {name}
+        </a>
+      ))}
+    </>
+  );
+}
 
 export function SiteHeader() {
-  const pathname = usePathname();
-  const labActive = pathname === "/";
-  const glossaryActive = pathname.startsWith("/glossary");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("nav-open", menuOpen);
+    if (!menuOpen) {
+      return;
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+    // Rotating a phone into a desktop width closes the menu.
+    const wide = window.matchMedia("(min-width: 701px)");
+    const onWide = () => wide.matches && setMenuOpen(false);
+    window.addEventListener("keydown", onKey);
+    wide.addEventListener("change", onWide);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      wide.removeEventListener("change", onWide);
+    };
+  }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-white/90 backdrop-blur-md">
-      <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:h-24 sm:px-6">
-        <Link href="/" className="flex min-w-0 items-center gap-3">
-          <BrandMark className="size-12 shrink-0 sm:size-14" />
-          <span className="truncate text-lg font-semibold tracking-tight sm:text-xl">
-            Entra Token Lab
-          </span>
-        </Link>
-        <nav className="flex items-center gap-1 text-sm">
-          <Link
-            href="/"
-            aria-current={labActive ? "page" : undefined}
-            className={cn(
-              "rounded-full px-3 py-1.5",
-              labActive
-                ? "bg-foreground text-background"
-                : "text-foreground/80 hover:bg-muted"
-            )}
-          >
-            Lab
-          </Link>
-          <Link
-            href="/glossary"
-            aria-current={glossaryActive ? "page" : undefined}
-            className={cn(
-              "rounded-full px-3 py-1.5",
-              glossaryActive
-                ? "bg-foreground text-background"
-                : "text-foreground/80 hover:bg-muted"
-            )}
-          >
-            Glossary
-          </Link>
+    <header className="topbar shell">
+      <a className="brand" href={`${SITE}/`} aria-label="New Frontier Security home">
+        <Image
+          className="brand-logo"
+          src={`${siteBasePath}/new-frontier-security-logo.png`}
+          width={837}
+          height={349}
+          alt="New Frontier Security"
+          priority
+          unoptimized
+        />
+      </a>
+      <div className="header-actions">
+        <nav className="desktop-nav" aria-label="Main navigation">
+          <NavLinks />
         </nav>
+        <div className={`site-menu${menuOpen ? " open" : ""}`}>
+          <button
+            type="button"
+            className="menu-toggle"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span className="hamburger" aria-hidden="true" />
+          </button>
+          {menuOpen ? (
+            <nav id="mobile-nav" aria-label="Mobile navigation">
+              <NavLinks onNavigate={() => setMenuOpen(false)} />
+            </nav>
+          ) : null}
+        </div>
       </div>
     </header>
   );
