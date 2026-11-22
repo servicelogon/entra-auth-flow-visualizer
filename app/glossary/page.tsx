@@ -1,27 +1,36 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { GlossarySearch } from "@/components/glossary-search";
 
 export const metadata: Metadata = {
-  title: "Glossary · Entra Token Lab",
+  title: "Glossary · Entra Token Lab · New Frontier Security",
   description:
-    "Definitions for Entra ID tokens, cookies, PKCE, PRT, and related sign-in terms.",
+    "Plain-language definitions for Entra ID tokens, cookies, PKCE, the PRT, and related sign-in terms.",
 };
 
 export default function GlossaryPage() {
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
-      <section className="max-w-2xl">
-        <h1 className="text-4xl font-semibold tracking-tight">
-          The words this lab uses
-        </h1>
-        <p className="mt-4 text-lg leading-8 text-muted-foreground">
-          Definitions for the tokens, cookies, and sign-in terms in the lab. Open
-          a title to read why the term exists.
-        </p>
-      </section>
-      <div className="mt-8">
+    <main id="main" tabIndex={-1} className="page shell">
+      <div className="page-body">
+        <header className="step-head">
+          <p className="kicker">Glossary</p>
+          <h2>The words this lab uses</h2>
+          <p className="lede">
+            Every token, cookie, and sign-in term in the lab, in plain language. Open a
+            term to read why it exists.
+          </p>
+        </header>
         <GlossarySearch />
       </div>
+      <nav className="pager" aria-label="Section navigation">
+        <Link className="pager-link pager-prev" href="/">
+          <span className="pager-kicker">
+            <span className="arrow-icon arrow-back" aria-hidden="true" />
+            Back
+          </span>
+          <span className="pager-title">Lab</span>
+        </Link>
+      </nav>
     </main>
   );
 }
