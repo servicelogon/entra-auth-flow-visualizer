@@ -24,8 +24,77 @@ export function SiteFooter() {
   );
 }
 
-// A hairline icosahedron that turns slowly, ported from the NFS site. A still
-// frame when motion is reduced, and nothing at all where canvas is missing.
+type Vec = [number, number, number];
+type Wire = { verts: Vec[]; edges: [number, number][] };
+
+// The lab's token as a low-poly solid: a thin ticket notched at both ends,
+// perforated into header . payload . signature, with three claim lines on the
+// payload. Built flat in the x/y plane, then fitted to the unit sphere.
+function buildToken(): Wire {
+  const verts: Vec[] = [];
+  const edges: [number, number][] = [];
+  const v = (x: number, y: number, z: number) => verts.push([x, y, z]) - 1;
+  const e = (a: number, b: number) => edges.push([a, b]);
+
+  const HW = 0.8; // half width
+  const HH = 0.44; // half height
+  const T = 0.06; // half thickness
+  const NR = 0.15; // notch radius
+  const NS = 5; // facets per notch
+
+  // Outline, clockwise from the top-left corner, with a notch bitten into each end.
+  const outline: [number, number][] = [[-HW, HH], [HW, HH]];
+  for (let k = 0; k <= NS; k++) {
+    const a = Math.PI / 2 + (k * Math.PI) / NS;
+    outline.push([HW + NR * Math.cos(a), NR * Math.sin(a)]);
+  }
+  outline.push([HW, -HH], [-HW, -HH]);
+  for (let k = 0; k <= NS; k++) {
+    const a = -Math.PI / 2 + (k * Math.PI) / NS;
+    outline.push([-HW + NR * Math.cos(a), NR * Math.sin(a)]);
+  }
+  const front = outline.map(([x, y]) => v(x, y, T));
+  const back = outline.map(([x, y]) => v(x, y, -T));
+  outline.forEach((_, k) => {
+    e(front[k], front[(k + 1) % outline.length]);
+    e(back[k], back[(k + 1) % outline.length]);
+  });
+  // Side walls at the corners and the mouths of the notches.
+  for (const k of [0, 1, 2, 2 + NS, 3 + NS, 4 + NS, 5 + NS, 5 + 2 * NS]) {
+    e(front[k], back[k]);
+  }
+
+  // Two perforations on the face: header . payload . signature.
+  const dashes = 6;
+  const margin = 0.06;
+  const step = (2 * (HH - margin)) / dashes;
+  for (const x of [-0.3, 0.3]) {
+    for (let k = 0; k < dashes; k++) {
+      const y = HH - margin - k * step - step * 0.2;
+      e(v(x, y, T), v(x, y - step * 0.6, T));
+    }
+  }
+  // Claim lines on the payload.
+  for (const [y, length] of [[0.16, 0.42], [0, 0.3], [-0.16, 0.36]]) {
+    e(v(-0.21, y, T), v(-0.21 + length, y, T));
+  }
+
+  const reach = Math.max(...verts.map(([x, y, z]) => Math.hypot(x, y, z)));
+  return { verts: verts.map(([x, y, z]) => [x / reach, y / reach, z / reach]), edges };
+}
+
+const TOKEN = buildToken();
+// Lean the top toward the viewer, then roll it onto a shallow diagonal, as the
+// key is drawn on the Passkey AAGUID Lookup.
+const LEAN = 0.32;
+const ROLL = 0.3;
+const SPEED = 0.00018; // radians per millisecond, as on the NFS site
+const STILL = 0.4;
+
+// The footer mark: a hairline wireframe that turns slowly, drawn the same way
+// as the icosahedron on newfrontiersecurity.net (1px strokes, back edges faint,
+// one slow turn). On this tool the solid is a token. A still frame when motion
+// is reduced, and nothing at all where canvas is missing.
 function FooterWire() {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -34,22 +103,8 @@ function FooterWire() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const phi = (1 + Math.sqrt(5)) / 2;
-    const verts = [
-      [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
-      [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
-      [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1],
-    ].map(([x, y, z]) => {
-      const l = Math.hypot(x, y, z);
-      return [x / l, y / l, z / l];
-    });
-    const edges = [
-      [0, 1], [0, 5], [0, 7], [0, 10], [0, 11], [1, 5], [1, 7], [1, 8], [1, 9], [2, 3],
-      [2, 4], [2, 6], [2, 10], [2, 11], [3, 4], [3, 6], [3, 8], [3, 9], [4, 5], [4, 9],
-      [4, 11], [5, 9], [5, 11], [6, 7], [6, 8], [6, 10], [7, 8], [7, 10], [8, 9], [10, 11],
-    ];
+    const [cl, sl, cr, sr] = [Math.cos(LEAN), Math.sin(LEAN), Math.cos(ROLL), Math.sin(ROLL)];
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const tilt = 0.62;
     let frame = 0;
     let running = false;
 
@@ -60,25 +115,24 @@ function FooterWire() {
       canvas.height = canvas.width;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    const project = ([x, y, z]: number[], yaw: number) => {
+    // Turn about the vertical axis, lean toward the viewer, then roll.
+    const project = ([x, y, z]: Vec, yaw: number) => {
       const x1 = x * Math.cos(yaw) + z * Math.sin(yaw);
       const z1 = -x * Math.sin(yaw) + z * Math.cos(yaw);
-      return {
-        x: x1,
-        y: y * Math.cos(tilt) - z1 * Math.sin(tilt),
-        z: y * Math.sin(tilt) + z1 * Math.cos(tilt),
-      };
+      const y2 = y * cl - z1 * sl;
+      const z2 = y * sl + z1 * cl;
+      return { x: x1 * cr - y2 * sr, y: x1 * sr + y2 * cr, z: z2 };
     };
     const draw = (yaw: number) => {
       const w = canvas.clientWidth || 168;
-      const r = w * 0.36;
+      const r = w * 0.44;
       ctx.clearRect(0, 0, w, w);
       ctx.lineWidth = 1;
       ctx.strokeStyle = getComputedStyle(canvas).color;
-      const lines = edges
+      const lines = TOKEN.edges
         .map(([a, b]) => {
-          const s = project(verts[a], yaw);
-          const e = project(verts[b], yaw);
+          const s = project(TOKEN.verts[a], yaw);
+          const e = project(TOKEN.verts[b], yaw);
           return { s, e, d: (s.z + e.z) / 2 };
         })
         .sort((p, q) => p.d - q.d);
@@ -92,7 +146,7 @@ function FooterWire() {
       ctx.globalAlpha = 1;
     };
     const tick = (now: number) => {
-      draw(now * 0.00018);
+      draw(now * SPEED);
       frame = requestAnimationFrame(tick);
     };
     const start = () => {
@@ -103,14 +157,14 @@ function FooterWire() {
     const stop = () => {
       running = false;
       cancelAnimationFrame(frame);
-      draw(0.4);
+      draw(STILL);
     };
 
     size();
-    draw(0.4);
+    draw(STILL);
     const resize = new ResizeObserver(() => {
       size();
-      if (!running) draw(0.4);
+      if (!running) draw(STILL);
     });
     resize.observe(canvas);
     const visible = new IntersectionObserver(([entry]) =>
